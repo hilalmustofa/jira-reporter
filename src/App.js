@@ -8,9 +8,7 @@ const App = () => {
   const [htmlContent, setHtmlContent] = useState("");
   const [result, setResult] = useState([]);
   const [totals, setTotals] = useState({
-    originalEstimate: 0,
-    timeSpent: 0,
-    workRatio: 0,
+    originalEstimate: 0
   });
   const [selectedFileName, setSelectedFileName] = useState("");
   const [generateDisabled, setGenerateDisabled] = useState(true);
@@ -39,7 +37,6 @@ const App = () => {
     const $ = cheerio.load(htmlContent);
     const data = [];
     let totalOriginalEstimate = 0;
-    let totalTimeSpent = 0;
 
     $("tr.issuerow").each((index, element) => {
       const $element = $(element);
@@ -51,35 +48,29 @@ const App = () => {
         .text()
         .trim();
       const originalEstimateInHours = parseInt(
-        $element.find("td.customfield_10016").text(),
+        $element.find("td.customfield_10028").text(),
         10
       );
-      const timeSpentInSeconds = parseInt(
-        $element.find("td.timespent").text(),
+      const originalEstimateInHours2 = parseInt(
+        $element.find("td.customfield_10569").text(),
         10
       );
-      const timeSpentInHours = timeSpentInSeconds / 3600;
-      const workRatio = parseFloat($element.find("td.workratio").text());
-
-      totalOriginalEstimate += originalEstimateInHours || 0;
-      totalTimeSpent += timeSpentInHours || 0;
+      console.log(originalEstimateInHours2)
+      const status = $element.find("td.status").text()
+      const link = $element.find("td.issuekey").find("a").attr('href');
+      totalOriginalEstimate += originalEstimateInHours || originalEstimateInHours2 || 0;
 
       data.push({
         assignee,
         summary,
-        originalEstimate: formatNumber(originalEstimateInHours || 0),
-        timeSpent: formatNumber(timeSpentInHours || 0),
-        workRatio: formatNumber(workRatio || 0),
+        link: link,
+        originalEstimate: formatNumber(originalEstimateInHours || originalEstimateInHours2 || 0),
+        status: status,
       });
     });
 
-    const averageWorkRatio =
-      data.length > 0 ? (totalTimeSpent / totalOriginalEstimate) * 100 : 0;
-
     setTotals({
-      originalEstimate: formatNumber(totalOriginalEstimate),
-      timeSpent: formatNumber(totalTimeSpent),
-      workRatio: formatNumber(averageWorkRatio),
+      originalEstimate: formatNumber(totalOriginalEstimate)
     });
     setResult(data);
     setGenerateDisabled(true);
@@ -132,20 +123,20 @@ const App = () => {
               <thead>
                 <tr>
                   <th>Assignee</th>
+                  <th>Link</th>
                   <th>Summary</th>
                   <th>Story Points (hours)</th>
-                  <th>Time Spent (hours)</th>
-                  <th>Work Ratio</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {result.map((item, index) => (
                   <tr key={index}>
                     <td>{item.assignee}</td>
+                    <td>{item.link}</td>
                     <td>{item.summary}</td>
                     <td>{item.originalEstimate}</td>
-                    <td>{item.timeSpent}</td>
-                    <td>{item.workRatio.toFixed(0)}%</td>
+                    <td>{item.status}</td>
                   </tr>
                 ))}
               </tbody>
@@ -162,15 +153,11 @@ const App = () => {
               <thead>
                 <tr>
                   <th>Total Story Points (hours)</th>
-                  <th>Total Time Spent (hours)</th>
-                  <th>Average Work Ratio</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>{totals.originalEstimate}</td>
-                  <td>{totals.timeSpent}</td>
-                  <td>{totals.workRatio.toFixed(0)}%</td>
                 </tr>
               </tbody>
             </table>
