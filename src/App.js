@@ -55,16 +55,19 @@ const App = () => {
         $element.find("td.customfield_10569").text(),
         10
       );
-      console.log(originalEstimateInHours2)
+      const originalEstimateInHours3 = parseInt(
+        $element.find("td.customfield_10016").text(),
+        10
+      );
       const status = $element.find("td.status").text()
       const link = $element.find("td.issuekey").find("a").attr('href');
-      totalOriginalEstimate += originalEstimateInHours || originalEstimateInHours2 || 0;
+      totalOriginalEstimate += originalEstimateInHours || originalEstimateInHours2 || originalEstimateInHours3 || 0;
 
       data.push({
         assignee,
         summary,
         link: link,
-        originalEstimate: formatNumber(originalEstimateInHours || originalEstimateInHours2 || 0),
+        originalEstimate: formatNumber(originalEstimateInHours || originalEstimateInHours2 || originalEstimateInHours3 || 0),
         status: status,
       });
     });
