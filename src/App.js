@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import cheerio from "cheerio";
 import "./bulma.min.css";
 import "./App.css";
 import JiraLogo from "./jira.png";
+import axios from "axios";
 
 const App = () => {
   const [htmlContent, setHtmlContent] = useState("");
@@ -10,8 +11,38 @@ const App = () => {
   const [totals, setTotals] = useState({
     originalEstimate: 0
   });
+  const [target, setTarget] = useState(0);
   const [selectedFileName, setSelectedFileName] = useState("");
   const [generateDisabled, setGenerateDisabled] = useState(true);
+
+  const fetchTarget = async () => {
+    try {
+      const response = await axios.get(`https://harikerja.vercel.app/api`);
+      const data = response.data.data;
+
+      const monthNames = [
+        "januari", "februari", "maret", "april", "mei", "juni", 
+        "juli", "agustus", "september", "oktober", "november", "desember"
+      ];
+      const currentMonthName = monthNames[new Date().getMonth()];
+
+      const currentMonthData = data.find(month => month.bulan === currentMonthName);
+
+      if (currentMonthData) {
+        setTarget(currentMonthData.kerja);
+      } else {
+        setTarget(0);
+      }
+    } catch (error) {
+      console.error('Error fetching calendar data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTarget();
+  }, []);
+
+  const totalTarget = target * 6;
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -86,7 +117,7 @@ const App = () => {
         <img src={JiraLogo} width={70} alt="Jira Report Calculator" />
         <h1 className="title is-1">Jira Report Calculator</h1>
         <p>
-          Export your filtered JIRA issues to HTML then use this tool to
+          Export your filtered JIRA issues to HTML (all fields) and then use this tool to
           calculate the story points
         </p>
         <br />
@@ -136,7 +167,7 @@ const App = () => {
                 {result.map((item, index) => (
                   <tr key={index}>
                     <td>{item.assignee}</td>
-                    <td>{item.link}</td>
+                    <td><a href={item.link} target="_blank" rel="noopener noreferrer">{item.link}</a></td>
                     <td>{item.summary}</td>
                     <td>{item.originalEstimate}</td>
                     <td>{item.status}</td>
@@ -150,17 +181,21 @@ const App = () => {
         {result.length > 0 && (
           <div className="table-container">
             <br />
-            <h2 className="title is-4">Totals</h2>
+            <h2 className="title is-4">Calculations</h2>
             <br />
             <table className="table is-bordered is-fullwidth">
               <thead>
                 <tr>
                   <th>Total Story Points (hours)</th>
+                  <th>Target Story Points (hours)</th>
+                  <th>Needed Story Points (hours)</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>{totals.originalEstimate}</td>
+                  <td>{totalTarget}</td>
+                  <td>{totalTarget< totals.originalEstimate ? 0 : totals.originalEstimate - totalTarget}</td>
                 </tr>
               </tbody>
             </table>
